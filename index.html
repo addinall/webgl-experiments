@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+   <head>
+   <meta http-equiv="content-type" content= "text/html; charset=UTF-8">
+<!--  vim: set tabstop=4 shiftwidth=4 expandtab autoindent smartindent :
+
+
+        index.html
+        Mark Addinall
+        July 2013
+        Experimentation with the HTML5 canvas and audio objects
+	Another one of my playtime projects, but an interesting 
+	experiment in cross-platform responsive development using 
+	HTML5's <canvas> and <audio> elements.
+
+	This set of play time adventures are all about learning the 
+	capabilities of WebGL.  It looks smart!
+
+
+-->
+    <title>WebGL - HTML5 experiments Part 1</title>
+
+    <meta name="author" content="Mark Addinall Brisbane Australia">
+    <meta name="keywords" content="WebGL, HTML5, CSS3, Javascript, cross platform">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+    <script>
+
+
+
+$(document).ready(function(){
+
+            var canvas = document.getElementById('myCanvas');
+
+            // jQuery has shorthand for that, = $('#myCanvas')[0];
+            // but until I REALLY want the quick and dirty shorthand,
+            // we will do it the long hand way for clarity.
+            // at the moment I am only using jQuery twice.  I might
+            // dump it for this project just to save a little space
+            // on the mobile devices.
+
+            var unit_test = false;                                      // switch between test mode
+
+
+            // -------------- Graphics section ---------------------
+            // OK.  We bring the gradient graphical calculations
+            // up a level and make them global to this namespace.
+            // the scope is not an issue (although we could re-use
+            // the schemes in future expabnsions, but the computational
+            // overhead IS an issue.  I have noticed in the general
+            // 'HOW TO' games world, that these things seem to be
+            // re-computed over and over and over.  Some thousands of times
+            // in some instances.  I am bringing this lot up here
+            // so that the calculations can be done ONCE, on page load,
+            // and never, ever again.
+
+
+            var context = canvas.getContext('2d');                      // this is a crap naming convention
+                                                                        // and should really be changed
+                                                                        // before <canvas> gets any more
+                                                                        // complicated.
+            // createLinearGradient() method
+            //
+            // It expects four parameters that define a line (x1, y1, x2, y2). 
+            // The colors will be perpendicular to this line, so if you want 
+            // horizontal color bands, draw a vertical line. If you want 
+            // vertical color bands, draw a horizontal line. The line typically 
+            // takes up the entire width or height of the element, but it doesn't 
+            // have to. If the line is smaller than the image, the excess area 
+            // will be automatically assigned the color from the nearest end 
+            // of the gradient. It is a great pity one cannot BIND a gradient
+            // to an already defined graphic, and let the gradient assume the
+            // inherited cartesian co-ordinates.  Re-stateing the co-ordinates
+            // is a pain and prone to error.
+
+            // gradient for the End Game Banner texts
+
+            var end_gradient = context.createLinearGradient(5, 50, 500, 20);
+
+            end_gradient.addColorStop(0.1,  '#F82E23');
+            end_gradient.addColorStop(0.25, '#E2E651');
+            end_gradient.addColorStop(0.5,  '#55D268');
+            end_gradient.addColorStop(0.75, '#5A77DA');
+            end_gradient.addColorStop(1,    '#C84489');
+
+            
+
+            // ------------ audio section ----------------
+            // get the sound effects from the markup below
+            // both WAV and MP3 versions of SFX are presented
+            // to the HTML5 markup.  This will enable sounds
+            // to be consistant over all of the major
+            // browsers.
+
+            var noise_on    = true;                                     // sound toggle
+            
+            var bounce      = document.getElementById('bounce');        // ball hits ANYTHING
+            var explode     = document.getElementById('explode');       // brick is destroyed
+            var over        = document.getElementById('over');          // game over gurgle
+            var firework    = document.getElementById('firework');      // player won!  YAH!
+            var missed      = document.getElementById('missed');        // ball fell down the back
+
+            firework.volume = 1;                                        // couple of quiet SFX
+            missed.volume   = 1;                                        // the range of volume is 0 .. 1
+                                                                        // that was hard to find
+            over.volume     = 1; 
+            bounce.volume   = 0.2;                                      // the sample volume range of 
+            explode.volume  = 0.4;                                      // the SFX i got off the net
+                                                                        // varied a GREAT deal so some
+                                                                        // volume munging became needed.
+                                                                        // either the BOING would give you
+                                                                        // a migrane and the EXPLOSION
+                                                                        // made the missus drop a glass
+                                                                        // of plonk, or you couldn't
+                                                                        // hear the applause!!!
+
+
+        });
+
+</script>
+
+
+<style type="text/css">
+
+
+/* This came from the CSS3 description of the post-it stickies
+ * menu system that is driving my RETRO HTML5 movie 
+ * demonstrators.  It shows a number od CSS3 techniques.
+ * At the moment it does not cater for ANY IE at all.
+ * (Now it does cater for IE 9+)
+ *
+ * The system is to be PURE HTML5 and CSS3 which means
+ * NO formatting in the HTML viz
+ *    NO <br><hr>
+ *    NO TABLES (spit)
+ *    NO inlines (spit again)
+ *    NO .giff, .jpeg, any graphic images to decorate.
+ *
+ * Obviously this experiment is a LOT different than my
+ * movie theatre, but shows how code can be re-used.
+ *
+ */
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  background:#666;
+  background: -moz-linear-gradient(top,  #000,  #ccc);
+  background: -webkit-linear-gradient(top, #000, #ccc);
+  background: -ms-linear-gradient(top, #000, #ccc);
+  background: -o-linear-gradient(top, #000, #ccc);
+  background: -webkit-gradient(linear, left top, left bottom, from(#000), to(#ccc));
+  background: linear-gradient(top, #000, #ccc);
+  color:white;
+}
+
+
+#wrapper {
+    width: 1100px;
+    margin:0 auto;
+}
+
+
+#header {
+    overflow: hidden;
+    padding: 0px;
+
+}
+
+
+h1{
+  font-family: MarkerFelt-Thin, "Comic Sans MS";
+  font-size:50px;
+  font-weight:normal;
+  text-align:center;
+  margin: 0px;
+}
+
+#content {
+
+    float: left;
+    width: 750px;
+    padding: 10px;
+}
+
+
+#sidebar {
+
+    float: right;
+    width: 280px;
+    padding:5px;
+    font-family: MarkerFelt-Thin, "Comic Sans MS";
+    color:blue;
+    background-color:white;
+    border:solid black; 
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    -moz-box-shadow: 10px 10px 5px black;
+    -webkit-box-shadow: 10px 10px 5px black;
+    box-shadow: 10px 10px 5px black;
+}
+
+
+ #myCanvas { 
+    background-color:white;
+    border:solid black; 
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -moz-box-shadow: 10px 10px 5px black;
+    -webkit-box-shadow: 10px 10px 5px black;
+    box-shadow: 10px 10px 5px black;
+    }
+
+#footer {
+
+    clear:both;
+    margin:20px;
+    padding:10px;
+    text-align:center;
+    color: black;
+    font-family: MarkerFelt-Thin, "Comic Sans MS";
+    font-size: 75%;
+}
+
+.red {
+    color: red;
+}
+
+.blue {
+    color: blue;
+}
+
+.yellow {
+    color: yellow;
+}
+
+.green {
+    color: green;
+}
+
+.black {
+    color: black;
+}
+
+
+.orange {
+    color: orange;
+}
+
+
+.button {
+    border-top: 1px solid #261701;
+    background: #3b3302;
+    background: -webkit-gradient(linear, left top, left bottom, from(#fac60a), to(#3b3302));
+    background: -webkit-linear-gradient(top, #fac60a, #3b3302);
+    background: -moz-linear-gradient(top, #fac60a, #3b3302);
+    background: -ms-linear-gradient(top, #fac60a, #3b3302);
+    background: -o-linear-gradient(top, #fac60a, #3b3302);
+    padding: 5px 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+    -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+    box-shadow: rgba(0,0,0,1) 0 1px 0;
+    text-shadow: rgba(0,0,0,.4) 0 1px 0;
+    color: white;
+    font-size: 17px;
+    font-family: Georgia, serif;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+
+.button:hover {
+    border-top-color: #5e2706;
+    background: #5e2706;
+    color: #ccc;
+}
+
+.button:active {
+    border-top-color: #54031a;
+    background: #54031a;
+}
+
+
+
+</style>
+
+</head>
+
+
+
+<body>
+    
+<audio id="bounce">
+   <source src="sfx/bounce.wav">
+   <source src="sfx/bounce.mp3" type='audio/mpeg; codecs="mp3"'>
+</audio>
+
+<audio id="explode">
+   <source src="sfx/explode.wav">
+   <source src="sfx/explode.mp3" type='audio/mpeg; codecs="mp3"'>
+</audio>
+
+<audio id="over">
+   <source src="sfx/over.wav">
+   <source src="sfx/over.mp3" type='audio/mpeg; codecs="mp3"'>
+</audio>
+
+<audio id="missed">
+   <source src="sfx/missed.wav">
+   <source src="sfx/missed.mp3" type='audio/mpeg; codecs="mp3"'>
+</audio>
+
+<audio id="firework">
+   <source src="sfx/firework.wav">
+   <source src="sfx/firework.mp3" type='audio/mpeg; codecs="mp3"'>
+</audio>
+
+    <div id="wrapper">
+        <div id="header">
+            <h1>WebGL - Part One</h1>
+        </div>
+
+
+        <div id="content">
+
+            <canvas id="myCanvas" height="460" width="700">
+            Your browser does not support HTML5 canvas objects.  You need a decent browser.
+            </canvas>
+
+        </div>
+
+        <div id="sidebar">
+            <p class="green"> What is BREAKOUT!?</p>
+            <p class="blue"> It is part of a number of experiments that are exploring:</p>
+            <ul class="black">
+                <li>Cross platform development</li>
+                <li class="orange">HTML5 features</li>
+                <li class="green">CSS3 features</li>
+                <li class="red">Modern Javascript</li>
+                <li class="blue">Graphics without files</li>
+                <li class="green">Animation without FLASH!</li>
+                <li class="orange">Standards compliance</li>
+           </ul>
+           <p class="green">Instructions</p>
+           <ul>
+                <li>Hit the BUTTON to start!</li>
+                <li class="orange">Left and Right Arrow keys to move</li>
+                <li class="green">'S' or 's' toggles the noise</li>
+                <li class="red">Let a Ball go to quit!</li>
+           </ul>
+           <p class="orange">HAVE FUN!
+           <button class="button" id="breaker_button" >START!</button> 
+           </p>
+
+        </div>
+
+
+        <div id="footer">
+            <p>
+            BREAKOUT!  by <a href="mailto:addinall@addinall.net">Mark Addinall</a> | 2013 | Brisbane Australia
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

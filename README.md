@@ -1,4 +1,4 @@
-# WbGL Experiments - Part 1
+# WebGL Experiments - Part 1
 ### Mark Addinall - 2015
 ___
 
